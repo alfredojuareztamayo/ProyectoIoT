@@ -9,6 +9,7 @@ public class items : MonoBehaviour
     public string mensajeMQTT;
     private MQTTManager mqttManager;
     public bool goodBad = true;
+    private ManagerWin ManagerWin;
     //public Color newColor;
 
 
@@ -32,11 +33,13 @@ public class items : MonoBehaviour
         {
             Debug.LogError("MQTTManager not found in the scene");
         }
-
-        if(goodBad )
+        ManagerWin = FindObjectOfType<ManagerWin>();
+        if (ManagerWin == null)
         {
-            mqttManager.advance++;
+            Debug.LogError("ManagerWin not found in the scene");
         }
+
+
     }
 
      private void OnTriggerEnter(Collider other)
@@ -47,10 +50,15 @@ public class items : MonoBehaviour
             {
                 mqttManager.SendCommand(mensajeMQTT);
                 Debug.Log("Item picked up and command sent");
-                if(goodBad)
-                {
-                    mqttManager.levelAvance++;
-                }
+                
+            }
+            if(ManagerWin != null && goodBad)
+            {
+                ManagerWin.RestValueOfItems();
+            }
+            if(!goodBad)
+            {
+                ManagerWin.RestLifePlayer();
             }
             gameObject.SetActive(false);
         }

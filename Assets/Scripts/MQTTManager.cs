@@ -50,7 +50,7 @@ public class MQTTManager : MonoBehaviour
     }
     private void Update()
     {
-        CheckAdvance();
+        //CheckAdvance();
     }
 
     private void Client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
