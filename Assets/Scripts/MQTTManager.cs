@@ -8,99 +8,102 @@ using System;
 
 public class MQTTManager : MonoBehaviour
 {
-    private MqttClient client;
-    public string brokerAddress = "broker.hivemq.com"; // Dirección del broker MQTT
-    public int brokerPort = 1883; // Puerto del broker MQTT
-    public string topic = "esp32sleek"; // Tema del MQTT
-    AudioListener audioListener;
-    bool playMusic;
-    public int levelAvance = 0;
-    //GameObject[] allItems;
-    public int advance;
+    private MqttClient client; // MQTT client
+ public string brokerAddress = "broker.hivemq.com"; // MQTT broker address
+ public int brokerPort = 1883; // MQTT broker port
+ public string topic = "esp32sleek"; // MQTT topic
+ AudioListener audioListener; // Audio listener
+ bool playMusic; // Flag to play music
+ public int levelAvance = 0; // Level progress
+ //GameObject[] allItems; // All game objects
+ public int advance; // Advance
 
-    void Start()
-    {
-        //GameObject[] allItems = GameObject.FindGameObjectsWithTag("advanceLevel");
-         //advance = GameObject.FindGameObjectsWithTag("advanceLevel").Length - 3;
-        // Inicializa el cliente MQTT
-        client = new MqttClient(brokerAddress);
+ void Start()
+ {
+     // Initialize all objects with the tag "advanceLevel"
+     // GameObject[] allItems = GameObject.FindGameObjectsWithTag("advanceLevel");
+     // advance = GameObject.FindGameObjectsWithTag("advanceLevel").Length - 3;
 
-        // Eventos de conexión y recepción de mensajes
-        client.MqttMsgPublishReceived += Client_MqttMsgPublishReceived;
-        client.ConnectionClosed += Client_ConnectionClosed;
+     // Initialize the MQTT client
+     client = new MqttClient(brokerAddress);
 
-        string clientId = Guid.NewGuid().ToString();
-        try
-        {
-            // Conexión al broker
-            client.Connect(clientId);
-            Debug.Log("MQTT client connected successfully");
+     // Connection and message reception events
+     client.MqttMsgPublishReceived += Client_MqttMsgPublishReceived;
+     client.ConnectionClosed += Client_ConnectionClosed;
 
-            // Suscribirse al tema
-            client.Subscribe(new string[] { topic }, new byte[] { MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE });
+     string clientId = Guid.NewGuid().ToString();
+     try
+     {
+         // Connect to the broker
+         client.Connect(clientId);
+         Debug.Log("MQTT client connected successfully");
 
-            // Enviar comandos
-            SendCommand("play");  // Envía un comando para reproducir música
-            SendCommand("light on");  // Envía un comando para encender la luz
-        }
-        catch (Exception e)
-        {
-            Debug.LogError("MQTT connection failed: " + e.Message);
-        }
-    }
-    private void Update()
-    {
-        //CheckAdvance();
-    }
+         // Subscribe to the topic
+         client.Subscribe(new string[] { topic }, new byte[] { MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE });
 
-    private void Client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
-    {
-        var message = Encoding.UTF8.GetString(e.Message);
-        Debug.Log("Received: " + message);
-    }
+         // Send commands
+         SendCommand("play");  // Send a command to play music
+         SendCommand("light on");  // Send a command to turn on the light
+     }
+     catch (Exception e)
+     {
+         Debug.LogError("MQTT connection failed: " + e.Message);
+     }
+ }
 
-    private void Client_ConnectionClosed(object sender, EventArgs e)
-    {
-        Debug.LogWarning("MQTT connection closed");
-    }
+ private void Update()
+ {
+     //CheckAdvance();
+ }
 
-    public void SendCommand(string cmd)
-    {
-        if (client.IsConnected)
-        {
-            client.Publish(topic, Encoding.UTF8.GetBytes(cmd), MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
-            Debug.Log("Command sent: " + cmd);
-        }
-        else
-        {
-            Debug.LogWarning("MQTT client is not connected");
-        }
-    }
+ // Event handler for receiving MQTT messages
+ private void Client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
+ {
+     var message = Encoding.UTF8.GetString(e.Message);
+     Debug.Log("Received: " + message);
+ }
 
-    void OnDestroy()
-    {
-        if (client.IsConnected)
-        {
-            client.Disconnect();
-            Debug.Log("MQTT client disconnected");
-        }
-    }
+ // Event handler for MQTT connection closed
+ private void Client_ConnectionClosed(object sender, EventArgs e)
+ {
+     Debug.LogWarning("MQTT connection closed");
+ }
 
+ // Method to send a command via MQTT
+ public void SendCommand(string cmd)
+ {
+     if (client.IsConnected)
+     {
+         client.Publish(topic, Encoding.UTF8.GetBytes(cmd), MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
+         Debug.Log("Command sent: " + cmd);
+     }
+     else
+     {
+         Debug.LogWarning("MQTT client is not connected");
+     }
+ }
 
-    void CheckAdvance()
-    {
-        
-        
-        //Debug.Log(advance);
-        if (levelAvance / advance == 1)
-        {
-            SendCommand("lvl2");
-        }
-        if (levelAvance/advance > 0.5)
-        {
-            SendCommand("lvl1");
-        }
+ void OnDestroy()
+ {
+     // Disconnect the MQTT client when the object is destroyed
+     if (client.IsConnected)
+     {
+         client.Disconnect();
+         Debug.Log("MQTT client disconnected");
+     }
+ }
 
-
-    }
+ // Method to check the advance level and send appropriate commands
+ void CheckAdvance()
+ {
+     // Debug.Log(advance);
+     if (levelAvance / advance == 1)
+     {
+         SendCommand("lvl2");
+     }
+     if (levelAvance / advance > 0.5)
+     {
+         SendCommand("lvl1");
+     }
+ }
 }
